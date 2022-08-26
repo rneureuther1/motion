@@ -697,10 +697,14 @@ void webu_process_control(struct webui_ctx *webui)
         PyObject *pArgs, *pValue;
         int i;
 
-        const char* pathToFile = "/home/pi/dev/PetWatch/moveServo";
+        const char* pathToFile = "moveServo";
         const char* functionName = "test";
 
         Py_Initialize();
+        PyRun_SimpleString("import sys");
+        PyRun_SimpleString("import os");
+        PyRun_SimpleString("sys.path.append(\"/home/pi/dev/PetWatch/\")");
+        PyRun_SimpleString("sys.path.append(os.getcwd())");
         pName = PyUnicode_DecodeFSDefault(pathToFile);
         /* Error checking of pName left out */
 
@@ -708,11 +712,16 @@ void webu_process_control(struct webui_ctx *webui)
         Py_DECREF(pName);
 
         if (pModule != NULL) {
+
+            MOTION_LOG(INF, TYPE_STREAM, NO_ERRNO, _("Loaded Module"));
+
             pFunc = PyObject_GetAttrString(pModule, functionName);
             /* pFunc is a new reference */
 
             if (pFunc && PyCallable_Check(pFunc)) {
+                MOTION_LOG(INF, TYPE_STREAM, NO_ERRNO, _("Got pfunc"));
                 //pArgs = PyTuple_New(argc - 3);
+                pArgs = PyTuple_New(3 - 3);
                 /*
                 for (i = 0; i < argc - 3; ++i) {
                     pValue = PyLong_FromLong(atoi(argv[i + 3]));
@@ -726,8 +735,7 @@ void webu_process_control(struct webui_ctx *webui)
                     PyTuple_SetItem(pArgs, i, pValue);
                 }
                 */
-                //pValue = PyObject_CallObject(pFunc, pArgs);
-                pValue = PyObject_CallObject(pFunc, NULL);
+                pValue = PyObject_CallObject(pFunc, pArgs);
 
                 Py_DECREF(pArgs);
                 if (pValue != NULL) {
