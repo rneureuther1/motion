@@ -25,7 +25,7 @@ setup_mode off
 ; log_file value
 
 # Level of log messages [1..9] (EMG, ALR, CRT, ERR, WRN, NTC, INF, DBG, ALL).
-log_level 6
+log_level 9
 
 # Target directory for pictures, snapshots and movies
 ; target_dir value
@@ -50,16 +50,16 @@ video_device /dev/video0
 ############################################################
 
 # Image width in pixels.
-width 640
+width 1920
 
 # Image height in pixels.
-height 480
+height 1080
 
 # Maximum number of frames to be captured per second.
-framerate 15
+framerate 100
 
 # Text to be overlayed in the lower left corner of images
-text_left CAMERA1
+text_left PIPER CAM
 
 # Text to be overlayed in the lower right corner of images.
 text_right %Y-%m-%d\n%T-%q
@@ -120,7 +120,7 @@ picture_filename %Y%m%d%H%M%S-%q
 ############################################################
 
 # Create movies of motion events.
-movie_output on
+movie_output off
 
 # Maximum length of movie in seconds.
 movie_max_time 60
@@ -142,10 +142,10 @@ movie_filename %t-%v-%Y%m%d%H%M%S
 webcontrol_port 8080
 
 # Restrict webcontrol connections to the localhost.
-webcontrol_localhost on
+webcontrol_localhost off
 
 # Type of configuration options to allow via the webcontrol.
-webcontrol_parms 0
+webcontrol_parms 2
 
 ############################################################
 # Live stream configuration parameters
@@ -155,7 +155,22 @@ webcontrol_parms 0
 stream_port 8081
 
 # Restrict stream connections to the localhost.
-stream_localhost on
+stream_localhost off
+
+# Pause motion algorithm
+pause on
+stream_preview_method 0
+stream_quality 100
+stream_grey off
+stream_maxrate 100
+stream_motion off
+
+# Didn't do anything
+# netcam_params input_format=h264
+
+# Other experimentation and these two worked when together
+# video_params palette=21
+# netcam_url v4l2:///dev/video0
 
 ##############################################################
 # Camera config files - One for each camera.

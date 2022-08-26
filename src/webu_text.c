@@ -709,6 +709,31 @@ static void webu_text_action(struct webui_ctx *webui)
 
 }
 
+
+static void webu_text_control(struct webui_ctx *webui)
+{
+    /* Call the action functions */
+
+    if (mystreq(webui->uri_cmd2,"panleft")) {
+        //webu_text_action_panleft(webui);
+        MOTION_LOG(INF, TYPE_STREAM, NO_ERRNO,
+            _("Got Panleft text control"));
+
+    } //else if (mystreq(webui->uri_cmd2,"eventstart")) {
+        //webu_text_action_eventstart(webui);
+
+    //} 
+    else {
+        webu_text_badreq(webui);
+        MOTION_LOG(INF, TYPE_STREAM, NO_ERRNO,
+            _("Invalid action requested: >%s< >%s< >%s<")
+            ,webui->uri_camid, webui->uri_cmd1, webui->uri_cmd2);
+        return;
+    }
+
+}
+
+
 static void webu_text_track_pantilt(struct webui_ctx *webui)
 {
     /* Call the track function */
@@ -1164,7 +1189,8 @@ void webu_text_main(struct webui_ctx *webui)
 
     } else if (mystreq(webui->uri_cmd1,"action")) {
         webu_text_action(webui);
-
+    } else if (mystreq(webui->uri_cmd1,"control")) {
+        webu_text_control(webui);
     } else if ((mystreq(webui->uri_cmd1,"track")) &&
                (mystreq(webui->uri_cmd2,"set")) &&
                (strlen(webui->uri_parm1) == 0)) {

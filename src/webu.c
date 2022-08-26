@@ -676,6 +676,27 @@ void webu_process_action(struct webui_ctx *webui)
     }
 }
 
+void webu_process_control(struct webui_ctx *webui)
+{
+    /* Process the actions from the webcontrol that the user requested.  This is used
+     * for both the html and text interface.  The text interface just adds a additional
+     * response whereas the html just performs the action
+     */
+    int indx;
+
+    indx = 0;
+    if (mystreq(webui->uri_cmd2,"panleft")) {
+        MOTION_LOG(INF, TYPE_STREAM, NO_ERRNO,
+            _("Panning Left Here"));
+    } 
+    else {
+        MOTION_LOG(INF, TYPE_STREAM, NO_ERRNO,
+            _("Invalid action requested: >%s< >%s< >%s<")
+            , webui->uri_camid, webui->uri_cmd1, webui->uri_cmd2);
+        return;
+    }
+}
+
 static int webu_process_config_set(struct webui_ctx *webui)
 {
     /* Process the request to change the configuration parameters.  Used

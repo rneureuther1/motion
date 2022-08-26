@@ -364,6 +364,32 @@ static void webu_html_navbar_action(struct webui_ctx *webui)
     webu_write(webui, response);
 }
 
+
+static void webu_html_navbar_control(struct webui_ctx *webui)
+{
+    /* Write out the options included in the actions dropdown*/
+    char response[WEBUI_LEN_RESP];
+
+    snprintf(response, sizeof (response),
+        "    <div class=\"dropdown\">\n"
+        "      <button onclick='display_controls()' id=\"ctrl_drop\" class=\"dropbtn\">%s</button>\n"
+        "      <div id='ctl_btn' class=\"dropdown-content\">\n"
+        "        <a onclick=\"action_click('/control/panleft');\">%s</a>\n"
+        "        <a onclick=\"action_click('/control/panright');\">%s</a>\n"
+        "        <a onclick=\"action_click('/control/tiltup');\">%s</a>\n"
+        "        <a onclick=\"action_click('/control/tiltdown');\">%s</a>\n"
+        "        <a onclick=\"action_click('/control/droptreat');\">%s</a>\n"
+        "      </div>\n"
+        "    </div>\n"
+        ,_("Controls")
+        ,_("<- Left")
+        ,_("Right ->")
+        ,_("Up")
+        ,_("Down")
+        ,_("Treat"));
+    webu_write(webui, response);
+}
+
 static void webu_html_navbar(struct webui_ctx *webui)
 {
     /* Write the navbar section*/
@@ -376,6 +402,8 @@ static void webu_html_navbar(struct webui_ctx *webui)
     webu_html_navbar_camera(webui);
 
     webu_html_navbar_action(webui);
+
+    webu_html_navbar_control(webui);
 
     snprintf(response, sizeof (response),
         "    <a href=\"https://motion-project.github.io/motion_guide.html\" "
@@ -727,6 +755,15 @@ static void webu_html_script_action(struct webui_ctx *webui)
     char response[WEBUI_LEN_RESP];
 
     snprintf(response, sizeof (response),"%s",
+        "    function event_callpython() {\n"
+        "      console.log(\"Call Python Event\");"
+        "      $.ajax({\n"
+        "        url: \"/home/pi/dev/PetWatch/moveServo.py\",\n"
+        "        context: document.body\n"
+        "      })\n"
+        "    }\n\n"
+    );
+    snprintf(response, sizeof (response),"%s",
         "    function event_reloadpage() {\n"
         "      window.location.reload();\n"
         "    }\n\n"
@@ -741,6 +778,13 @@ static void webu_html_script_action(struct webui_ctx *webui)
         "      } else if (actval == \"track\") {\n"
         "        document.getElementById('cfg_form').style.display=\"none\";\n"
         "        document.getElementById('trk_form').style.display=\"inline\";\n"
+        "      } else if (actval == \"control\") {\n"
+        "        document.getElementById('cfg_form').style.display=\"none\";\n"
+        "        document.getElementById('trk_form').style.display=\"none\";\n"
+        "        if ((actval == \"/control/panleft\")) {\n"
+        "          console.log(\"Got action val panleft\");"
+        "          http.addEventListener('?reid?', event_callpython); \n"
+        "        }\n"
         "      } else {\n"
         "        document.getElementById('cfg_form').style.display=\"none\";\n"
         "        document.getElementById('trk_form').style.display=\"none\";\n"
@@ -1000,6 +1044,25 @@ static void webu_html_script_menuact(struct webui_ctx *webui)
 
 }
 
+
+static void webu_html_script_menuctl(struct webui_ctx *webui)
+{
+    /* Write the javascript display_actions() function */
+    char response[WEBUI_LEN_RESP];
+
+    snprintf(response, sizeof (response),"%s",
+        "    function display_controls() {\n"
+        "      document.getElementById('cam_btn').style.display = 'none';\n"
+        "      if (document.getElementById('ctl_btn').style.display == 'block') {\n"
+        "        document.getElementById('ctl_btn').style.display = 'none';\n"
+        "      } else {\n"
+        "        document.getElementById('ctl_btn').style.display = 'block';\n"
+        "      }\n"
+        "    }\n\n");
+    webu_write(webui, response);
+
+}
+
 static void webu_html_script_evtclk(struct webui_ctx *webui)
 {
     /* Write the javascript 'click' EventListener */
@@ -1200,6 +1263,8 @@ static void webu_html_script(struct webui_ctx *webui)
 
     webu_html_script_menuact(webui);
 
+    webu_html_script_menuctl(webui);
+
     webu_html_script_evtclk(webui);
 
     snprintf(response, sizeof (response),"%s", "  </script>\n");
@@ -1301,7 +1366,11 @@ void webu_html_main(struct webui_ctx *webui)
     } else if (mystreq(webui->uri_cmd1,"track")) {
         retcd = webu_process_track(webui);
 
-    } else{
+    } else if (mystreq(webui->uri_cmd1,"control")) {
+        webu_process_control(webui);
+
+    }
+    else{
         MOTION_LOG(INF, TYPE_STREAM, NO_ERRNO,
             _("Invalid action requested: >%s< >%s< >%s<")
             ,webui->uri_camid, webui->uri_cmd1, webui->uri_cmd2);

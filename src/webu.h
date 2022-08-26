@@ -26,7 +26,7 @@
 /* Some defines of lengths for our buffers */
 #define WEBUI_LEN_PARM 512          /* Parameters specified */
 #define WEBUI_LEN_URLI 512          /* Maximum URL permitted */
-#define WEBUI_LEN_RESP 1024         /* Initial response size */
+#define WEBUI_LEN_RESP 2048         /* Initial response size */
 #define WEBUI_MHD_OPTS 10           /* Maximum number of options permitted for MHD */
 #define WEBUI_LEN_LNK  15           /* Maximum length for chars in strminfo */
 
@@ -87,6 +87,7 @@ struct webui_ctx {
 void webu_start(struct context **cnt);
 void webu_stop(struct context **cnt);
 void webu_process_action(struct webui_ctx *webui);
+void webu_process_control(struct webui_ctx *webui);
 int webu_process_config(struct webui_ctx *webui);
 int webu_process_track(struct webui_ctx *webui);
 void webu_write(struct webui_ctx *webui, const char *buf);
