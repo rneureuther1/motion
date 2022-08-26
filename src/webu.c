@@ -40,6 +40,8 @@
  *        camera are always sequential and enforcement of the pointers being sequential
  *        has not been observed in the other modules. (This is a legacy assumption)
  */
+#define PY_SSIZE_T_CLEAN
+#include "Python.h"
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -54,6 +56,8 @@
 #include "webu_stream.h"
 #include "webu_status.h"
 #include "translate.h"
+
+
 
 static mymhd_retcd webu_mhd_send(struct webui_ctx *webui, int ctrl);
 
@@ -682,13 +686,85 @@ void webu_process_control(struct webui_ctx *webui)
      * for both the html and text interface.  The text interface just adds a additional
      * response whereas the html just performs the action
      */
-    int indx;
-
-    indx = 0;
+    //int indx;
+    //indx = 0;
     if (mystreq(webui->uri_cmd2,"panleft")) {
         MOTION_LOG(INF, TYPE_STREAM, NO_ERRNO,
-            _("Panning Left Here"));
+            _("Panning Left Here. Call Python Here"));
+
+
+        PyObject *pName, *pModule, *pFunc;
+        PyObject *pArgs, *pValue;
+        int i;
+
+        const char* pathToFile = "/home/pi/dev/PetWatch/moveServo";
+        const char* functionName = "test";
+
+        Py_Initialize();
+        pName = PyUnicode_DecodeFSDefault(pathToFile);
+        /* Error checking of pName left out */
+
+        pModule = PyImport_Import(pName);
+        Py_DECREF(pName);
+
+        if (pModule != NULL) {
+            pFunc = PyObject_GetAttrString(pModule, functionName);
+            /* pFunc is a new reference */
+
+            if (pFunc && PyCallable_Check(pFunc)) {
+                //pArgs = PyTuple_New(argc - 3);
+                /*
+                for (i = 0; i < argc - 3; ++i) {
+                    pValue = PyLong_FromLong(atoi(argv[i + 3]));
+                    if (!pValue) {
+                        Py_DECREF(pArgs);
+                        Py_DECREF(pModule);
+                        fprintf(stderr, "Cannot convert argument\n");
+                        //return 1;
+                    }
+                    //pValue reference stolen here:
+                    PyTuple_SetItem(pArgs, i, pValue);
+                }
+                */
+                //pValue = PyObject_CallObject(pFunc, pArgs);
+                pValue = PyObject_CallObject(pFunc, NULL);
+
+                Py_DECREF(pArgs);
+                if (pValue != NULL) {
+                    //printf("Result of call: %ld\n", PyLong_AsLong(pValue));
+                    MOTION_LOG(INF, TYPE_STREAM, NO_ERRNO, _("Result of call: %ld\n"),PyLong_AsLong(pValue));
+                    Py_DECREF(pValue);
+                }
+                else {
+                    Py_DECREF(pFunc);
+                    Py_DECREF(pModule);
+                    PyErr_Print();
+                    //fprintf(stderr,"Call failed\n");
+                    MOTION_LOG(ERR, TYPE_STREAM, NO_ERRNO, _("Call failed\n"));
+                    //return 1;
+                }
+            }
+            else {
+                if (PyErr_Occurred())
+                    PyErr_Print();
+                fprintf(stderr, "Cannot find function \"%s\"\n", functionName);
+                MOTION_LOG(ERR, TYPE_STREAM, NO_ERRNO, _("Cannot find function \"%s\"\n"),functionName);
+            }
+            Py_XDECREF(pFunc);
+            Py_DECREF(pModule);
+        }
+        else {
+            PyErr_Print();
+            fprintf(stderr, "Failed to load \"%s\"\n", pathToFile);
+            MOTION_LOG(ERR, TYPE_STREAM, NO_ERRNO, _("Failed to load \"%s\"\n"),pathToFile);
+            //return 1;
+        }
+        if (Py_FinalizeEx() < 0) {
+            //return 120;
+        }
+
     } 
+
     else {
         MOTION_LOG(INF, TYPE_STREAM, NO_ERRNO,
             _("Invalid action requested: >%s< >%s< >%s<")
@@ -696,6 +772,7 @@ void webu_process_control(struct webui_ctx *webui)
         return;
     }
 }
+
 
 static int webu_process_config_set(struct webui_ctx *webui)
 {
