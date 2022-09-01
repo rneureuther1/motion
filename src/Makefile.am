@@ -1,10 +1,12 @@
-AM_CPPFLAGS= -Dsysconfdir=\"$(sysconfdir)/motion\" -DLOCALEDIR=\"$(DESTDIR)$(localedir)\"
+PY_CFLAGS  := $(shell python3-config --embed --cflags)
+PY_LDFLAGS := $(shell python3-config --embed --ldflags)
+AM_CPPFLAGS= -Dsysconfdir=\"$(sysconfdir)/motion\" -DLOCALEDIR=\"$(DESTDIR)$(localedir)\" $(PY_CFLAGS) -fPIC
 
 if INC_MMAL_SRC
 MMAL_SRC=raspicam/RaspiCamControl.c raspicam/RaspiCLI.c
 endif
 
-LIBS = @LIBINTL@ @LIBS@
+LIBS = $(PY_LDFLAGS) @LIBINTL@ @LIBS@
 
 bin_PROGRAMS = motion
 
